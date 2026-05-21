@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STATION_02_THE_ANALYST_V10</title>
+    <style>
+        :root { --neon: #22ff22; --bg: #050805; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; text-transform: uppercase; }
+        #monitor { width: 95%; max-width: 1100px; border: 3px solid var(--neon); padding: 40px; background: rgba(0, 15, 0, 0.95); box-shadow: inset 0 0 25px rgba(0,255,0,0.15); position: relative; box-sizing: border-box; }
+        h1 { letter-spacing: 6px; border-bottom: 2px solid var(--neon); padding-bottom: 12px; margin-top: 0; font-size: 2.2rem; }
+        .table-container { display: flex; gap: 10px; margin: 15px 0; font-size: 0.75rem; }
+        .data-table { flex: 1; border: 1px solid #1a331a; background: #000; padding: 10px; height: 280px; overflow-y: auto; }
+        .grid-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; line-height: 1.4; text-align: center; }
+        #node-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .node { border: 1px solid #224422; padding: 15px; text-align: center; font-size: 1.2rem; }
+        .hot { background: var(--neon); color: black; font-weight: bold; }
+        .dead { background: #111; color: #333; }
+        #noise-field { background: #000; border: 1px solid #224422; padding: 20px; font-size: 1.4rem; line-height: 1.5; letter-spacing: 8px; text-align: center; color: #1a661a; min-height: 150px; }
+        .highlight-symbol { color: #fff; font-weight: bold; }
+        .frequency-key { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(34, 255, 34, 0.1); padding: 15px; border: 1px solid var(--neon); }
+        .key-item { font-size: 1.2rem; color: #fff; }
+        #timer-display { color: #ff3333; font-weight: bold; float: right; font-size: 1.5rem; }
+        input { background: transparent; border: none; border-bottom: 3px solid var(--neon); color: #fff; font-family: inherit; font-size: 2.2rem; width: 100%; text-align: center; outline: none; margin-top: 30px; }
+        .hidden { display: none; }
+        .btn { background: var(--neon); color: black; border: none; padding: 18px 35px; font-family: inherit; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.2rem; }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+        /* === ESCAPE ROOM POLISH === */
+        .station-id { font-size: 0.75rem; color: #1a6b1a; letter-spacing: 4px; margin-bottom: 6px; display: block; }
+        .room-title { font-size: 0.7rem; color: #1a6b1a; letter-spacing: 3px; text-align: right; position: absolute; top: 14px; right: 20px; }
+        .skill-tags { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0 24px 0; }
+        .skill-tag {
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            padding: 5px 14px;
+            background: rgba(34,255,34,0.06);
+            box-shadow: 0 0 8px rgba(34,255,34,0.15);
+        }
+        .skill-tag::before { content: "▸ "; }
+        .divider-line { border: none; border-top: 1px solid #1a4d1a; margin: 18px 0; }
+        .mission-block { border-left: 3px solid var(--neon); padding-left: 16px; margin: 16px 0; }
+        .mission-block p { margin: 6px 0; }
+        .status-line { font-size: 0.8rem; color: #3a8a3a; letter-spacing: 2px; margin-top: 20px; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+        .blink { animation: blink 1.4s infinite; }
+    </style>
+</head>
+<body>
+
+<div id="monitor">
+    <div id="briefing">
+        <span class="room-title">BREAKOUT TERMINAL // STATION 02 OF 04</span>
+        <span class="station-id">◈ ANALYST_SYSTEMS_NODE // INTEGRITY BREACH DETECTED</span>
+        <h1>ROLE: THE ANALYST</h1>
+
+        <div class="skill-tags">
+            <span class="skill-tag">DATA ANALYSIS</span>
+            <span class="skill-tag">MATH &amp; NUMBERS</span>
+            <span class="skill-tag">ATTENTION TO DETAIL</span>
+        </div>
+
+        <hr class="divider-line">
+
+        <div class="mission-block">
+            <p><strong>MISSION:</strong> SYSTEM INTEGRITY AUDIT // CROSS-REFERENCE ALL ANOMALIES ACROSS FIVE SECURITY LEVELS.</p>
+            <p style="font-size: 0.9rem; color: #3a8a3a; margin-top: 10px;">SCAN THE DATA. FIND THE PATTERNS. ONE WRONG ENTRY RESETS THE SEQUENCE — STAY SHARP.</p>
+        </div>
+
+        <hr class="divider-line">
+
+        <p class="status-line">STATUS: INTEGRITY BREACH ACTIVE <span class="blink">▮</span> // AUDIT REQUIRED // 5 SECURITY LEVELS</p>
+
+        <button class="btn" onclick="initGame()" style="margin-top: 28px;">INITIALIZE SYSTEM BYPASS</button>
+    </div>
+
+    <div id="game-zone" class="hidden">
+        <span id="lvl-tag" style="font-size: 0.9rem; color: #444; margin-bottom: 10px; display: inline-block;">ANALYST_SEC_01</span>
+        <span id="timer-display" class="hidden">SEC: 20</span>
+        
+        <div id="s1">
+            <p>SEC_LEVEL_01: SIGNAL TRIANGULATION</p>
+            <div class="table-container">
+                <div class="data-table"><div id="feed-a" class="grid-cols"></div></div>
+                <div class="data-table"><div id="feed-b" class="grid-cols"></div></div>
+                <div class="data-table"><div id="feed-c" class="grid-cols"></div></div>
+            </div>
+            <input type="text" id="i1" placeholder="COMMON_ID" autocomplete="off">
+        </div>
+
+        <div id="s2" class="hidden">
+            <p>SEC_LEVEL_02: CORE ROUTING LOAD</p>
+            <div id="node-grid"></div>
+            <div style="text-transform: none; border: 1px solid #224422; padding: 15px; font-size: 0.9rem;">
+                <strong>PROTOCOL:</strong> Sum values of <span style="color:#fff">HOT [GREEN]</span> nodes that are <strong>PRIME NUMBERS</strong>, then SUBTRACT count of <strong>DEAD</strong> nodes.
+            </div>
+            <input type="text" id="i2" placeholder="FINAL_VALUE" autocomplete="off">
+        </div>
+
+        <div id="s3" class="hidden">
+            <p>SEC_LEVEL_03: HEURISTIC DATA TRACING</p>
+            <div class="table-container">
+                <div class="data-table"><table><thead><tr><th>TIME</th><th>USER_REF</th></tr></thead><tbody id="t2"></tbody></table></div>
+                <div class="data-table"><table><thead><tr><th>PORT</th><th>USER_REF</th></tr></thead><tbody id="t1"></tbody></table></div>
+                <div class="data-table"><table><thead><tr><th>PORT</th><th>FRAG_A</th><th>FRAG_B</th></tr></thead><tbody id="t3"></tbody></table></div>
+            </div>
+            <div style="background: rgba(34, 255, 34, 0.1); border: 1px solid var(--neon); padding: 10px; font-size: 0.85rem; text-transform: none;">
+                Trace the <span style="color:#fff">08:42</span> login. <strong>DECODING RULE:</strong> [FRAG_A] + [FRAG_B] - (USER_REF digits).
+            </div>
+            <input type="text" id="i3" placeholder="HEX_TOKEN" autocomplete="off">
+        </div>
+
+        <div id="s4" class="hidden">
+            <p>SEC_LEVEL_04: ANOMALY COORDINATE SCAN</p>
+            <div style="background: #000; padding: 20px; border: 1px solid #224422; font-size: 1.1rem; line-height: 1.8; letter-spacing: 4px; text-align: center;" id="coord-box"></div>
+            <input type="text" id="i4" placeholder="ERROR_COORD" autocomplete="off">
+        </div>
+
+        <div id="s5" class="hidden">
+            <p>SEC_LEVEL_05: FINAL INTEGRITY OVERRIDE (TIME SENSITIVE)</p>
+            <div id="noise-field"></div>
+            <div class="frequency-key" id="f-key"></div>
+            <p style="text-align:center; font-size: 0.8rem; text-transform: none; color: #555;">SYSTEM RE-ENCRYPTING ON TIMER. COUNT SYMBOLS & INPUT 4-DIGIT CODE.</p>
+            <input type="text" id="i5" placeholder="CODE_INPUT" autocomplete="off">
+        </div>
+
+        <div id="win" class="hidden" style="text-align: center;">
+            <h1 style="color: #fff;">ANALYSIS COMPLETE</h1>
+            <h1 style="font-size: 5.5rem; text-shadow: 0 0 25px var(--neon); margin: 20px 0;">HEART</h1>
+        </div>
+    </div>
+</div>
+
+<script>
+    let curLvl = 1;
+    let level5Code = "";
+    let timeLeft = 20;
+    let timerInt = null;
+
+    function initGame() {
+        document.getElementById('briefing').classList.add('hidden');
+        document.getElementById('game-zone').classList.remove('hidden');
+        setupL1();
+    }
+
+    function setupL1() {
+        const target = "XV-92";
+        const a = ["A1-10", "B2-20", "C3-30", "D4-40", "E5-50", "F6-60", "G7-70", "H8-80", "I9-90", "J1-11", "K2-22", "L3-33", "M4-44", "N5-55", "O6-66", "P7-77", "Q8-88", "R9-99", "S1-23", target];
+        const b = ["Z9-00", "X8-11", "Y7-22", "W6-33", "V5-44", "U4-55", "T3-66", "S2-77", "R1-88", "Q0-99", "P9-12", "O8-23", "N7-34", "M6-45", "L5-56", "K4-67", "J3-78", "I2-89", "H1-90", target];
+        const c = ["AA-11", "BB-22", "CC-33", "DD-44", "EE-55", "FF-66", "GG-77", "HH-88", "II-99", "JJ-00", "KK-12", "LL-23", "MM-34", "NN-45", "OO-56", "PP-67", "QQ-78", "RR-89", "SS-90", target];
+        document.getElementById('feed-a').innerHTML = a.sort(()=>Math.random()-0.5).map(i=>`<span>${i}</span>`).join("");
+        document.getElementById('feed-b').innerHTML = b.sort(()=>Math.random()-0.5).map(i=>`<span>${i}</span>`).join("");
+        document.getElementById('feed-c').innerHTML = c.sort(()=>Math.random()-0.5).map(i=>`<span>${i}</span>`).join("");
+    }
+
+    function setupL2() {
+        const grid = document.getElementById('node-grid');
+        grid.innerHTML = "";
+        const hot = [2, 5, 8, 11, 13, 16]; 
+        for(let i=1; i<=16; i++) {
+            const n = document.createElement('div');
+            n.className = hot.includes(i) ? 'node hot' : 'node dead';
+            n.innerText = i;
+            grid.appendChild(n);
+        }
+    }
+
+    function setupL3() {
+        const t2D = [["08:10","REF:12"], ["08:15","REF:09"], ["08:22","REF:88"], ["08:30","REF:31"], ["08:42","REF:57"], ["08:45","REF:19"], ["08:50","REF:44"], ["08:55","REF:02"]];
+        const t1D = [["PRT_X2","REF:12"], ["PRT_Z1","REF:09"], ["PRT_V9","REF:57"], ["PRT_K1","REF:88"], ["PRT_B5","REF:31"], ["PRT_M4","REF:19"], ["PRT_L0","REF:44"], ["PRT_S7","REF:02"]];
+        const t3D = [["PRT_X2","1000","0500"], ["PRT_Z1","0400","0100"], ["PRT_K1","2200","1100"], ["PRT_B5","0800","0200"], ["PRT_V9","4000","2057"], ["PRT_M4","1500","0900"], ["PRT_L0","2000","1000"], ["PRT_S7","0300","0150"]];
+        document.getElementById('t2').innerHTML = t2D.sort(()=>Math.random()-0.5).map(d=>`<tr><td>${d[0]}</td><td>${d[1]}</td></tr>`).join("");
+        document.getElementById('t1').innerHTML = t1D.sort(()=>Math.random()-0.5).map(d=>`<tr><td>${d[0]}</td><td>${d[1]}</td></tr>`).join("");
+        document.getElementById('t3').innerHTML = t3D.sort(()=>Math.random()-0.5).map(d=>`<tr><td>${d[0]}</td><td>${d[1]}</td><td>${d[2]}</td></tr>`).join("");
+    }
+
+    function setupL4() {
+        const box = document.getElementById('coord-box');
+        box.innerHTML = "";
+        const alpha = "ABCDEFGH";
+        for(let i=0; i<20; i++) {
+            let n1 = Math.floor(Math.random()*9);
+            let n2 = 10 - n1;
+            let display = `${alpha[i%8]}-${n1}${n2}`;
+            if(i === 13) display = "F-39"; 
+            const span = document.createElement('span');
+            span.style.margin = "0 10px";
+            span.innerText = display;
+            box.appendChild(span);
+        }
+    }
+
+    function setupL5() {
+        const field = document.getElementById('noise-field');
+        const keyBox = document.getElementById('f-key');
+        const timerDisp = document.getElementById('timer-display');
+        timerDisp.classList.remove('hidden');
+        const syms = ['&', '#', 'X', 'Y'];
+        let counts = [0, 0, 0, 0];
+        let displayStr = "";
+        for(let i=0; i<4; i++) { counts[i] = Math.floor(Math.random() * 9) + 1; }
+        level5Code = counts.join("");
+        let pool = [];
+        syms.forEach((s, idx) => { for(let j=0; j<counts[idx]; j++) pool.push(s); });
+        for(let k=0; k<15; k++) pool.push(".", ":");
+        pool.sort(()=>Math.random()-0.5);
+        for(let i=0; i<pool.length; i++) {
+            let char = pool[i];
+            if(syms.includes(char)) displayStr += `<span class="highlight-symbol">${char}</span>`;
+            else displayStr += char;
+            if((i+1) % 7 === 0) displayStr += "<br>";
+            else displayStr += "::";
+        }
+        field.innerHTML = displayStr;
+        keyBox.innerHTML = syms.map(s => `<div class="key-item">[${s}]: ?</div>`).join("");
+        timeLeft = 20;
+        if(timerInt) clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            timeLeft--;
+            timerDisp.innerText = `SEC: ${timeLeft}`;
+            if(timeLeft <= 0) { triggerShake(); setupL5(); }
+        }, 1000);
+    }
+
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                const val = e.target.value.toUpperCase().replace(/\s/g, '');
+                let correct = false;
+                if(curLvl === 1 && val === "XV-92") correct = true;
+                if(curLvl === 2 && val === "21") correct = true;
+                if(curLvl === 3 && val === "6000") correct = true;
+                if(curLvl === 4 && val === "F-39") correct = true;
+                if(curLvl === 5 && val === level5Code) {
+                    correct = true;
+                    clearInterval(timerInt);
+                    document.getElementById('timer-display').classList.add('hidden');
+                }
+                if(correct) nextLevel();
+                else { triggerShake(); e.target.value = ""; }
+            }
+        });
+    });
+
+    function triggerShake() {
+        document.getElementById('monitor').classList.add('shake');
+        setTimeout(() => document.getElementById('monitor').classList.remove('shake'), 400);
+    }
+
+    function nextLevel() {
+        document.getElementById(`s${curLvl}`).classList.add('hidden');
+        curLvl++;
+        if(curLvl <= 5) {
+            document.getElementById(`s${curLvl}`).classList.remove('hidden');
+            document.getElementById('lvl-tag').innerText = `ANALYST_SEC_0${curLvl}`;
+            if(curLvl === 2) setupL2(); 
+            if(curLvl === 3) setupL3(); 
+            if(curLvl === 4) setupL4(); 
+            if(curLvl === 5) setupL5();
+            document.getElementById(`i${curLvl}`).focus();
+        } else { document.getElementById('win').classList.remove('hidden'); }
+    }
+</script>
+
+<script>
+    // 1. Disable Right-Click menu
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        alert("!! SECURITY ALERT: UNAUTHORIZED SYSTEM INSPECTION DETECTED !!");
+    });
+
+    // 2. Disable F12 and Developer Tool Keyboard Shortcuts
+    document.onkeydown = function(e) {
+        // F12, Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+U (View Source)
+        if(e.keyCode == 123 || 
+          (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) || 
+          (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+            
+            alert("!! SECURITY ALERT: KEYBOARD BYPASS ATTEMPTED !!");
+            return false;
+        }
+    };
+</script>
+
+</body>
+</html>
